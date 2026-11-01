@@ -322,7 +322,7 @@ extension LaundryItemTypeStyle on LaundryItemType {
       case LaundryItemType.pants:
         return Icons.dry_cleaning_rounded;
       case LaundryItemType.thobe:
-        return Icons.styler_rounded;
+        return Icons.man_rounded;
       case LaundryItemType.dress:
         return Icons.woman_rounded;
       case LaundryItemType.jacket:
