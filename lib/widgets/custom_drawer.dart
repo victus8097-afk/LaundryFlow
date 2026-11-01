@@ -1,22 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../models/owner_account.dart';
+import '../providers/auth_provider.dart';
 import '../providers/orders_provider.dart';
 import '../utils/app_constants.dart';
 import '../utils/app_theme.dart';
 
-/// قائمة التنقل الجانبية (Drawer) الموحّدة لكل أقسام التطبيق.
+/// قائمة التنقل الجانبية (Drawer) الموحّدة لكل أقسام التطبيق،
+/// وتعرض أيضًا حساب صاحب المغسلة المسجل حاليًا مع خيار تسجيل الخروج.
 class CustomDrawer extends StatelessWidget {
   const CustomDrawer({
     super.key,
     required this.currentTab,
     required this.onSelectTab,
     required this.onAddOrder,
+    required this.onLogout,
   });
 
   final int currentTab;
   final ValueChanged<int> onSelectTab;
   final VoidCallback onAddOrder;
+  final VoidCallback onLogout;
 
   void _selectTab(BuildContext context, int index) {
     // إغلاق القائمة ثم الانتقال للقسم المطلوب.
@@ -27,6 +32,7 @@ class CustomDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final OrdersProvider provider = context.watch<OrdersProvider>();
+    final AuthProvider auth = context.watch<AuthProvider>();
 
     return Drawer(
       backgroundColor: AppColors.surface,
@@ -44,6 +50,7 @@ class CustomDrawer extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
+                    _AccountTile(account: auth.account),
                     _DrawerItem(
                       icon: Icons.dashboard_rounded,
                       label: 'لوحة التحكم',
@@ -84,6 +91,20 @@ class CustomDrawer extends StatelessWidget {
                       onTap: () {
                         Navigator.of(context).pop();
                         _showAboutApp(context);
+                      },
+                    ),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 10),
+                      child: Divider(height: 1, thickness: 1, color: AppColors.border),
+                    ),
+                    _DrawerItem(
+                      icon: Icons.logout_rounded,
+                      label: 'تسجيل الخروج',
+                      selected: false,
+                      isDestructive: true,
+                      onTap: () {
+                        Navigator.of(context).pop();
+                        onLogout();
                       },
                     ),
                   ],
@@ -198,6 +219,95 @@ class _DrawerHeader extends StatelessWidget {
   }
 }
 
+/// بطاقة حساب صاحب المغسلة المسجل حاليًا (الاسم + المغسلة + الهاتف).
+class _AccountTile extends StatelessWidget {
+  const _AccountTile({required this.account});
+
+  final OwnerAccount? account;
+
+  @override
+  Widget build(BuildContext context) {
+    final OwnerAccount? owner = account;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceMuted,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        children: <Widget>[
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: AppColors.primaryTint,
+              borderRadius: BorderRadius.circular(13),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              owner?.ownerInitial ?? '؟',
+              style: AppTheme.text(
+                size: 17,
+                weight: FontWeight.w800,
+                color: AppColors.primaryDark,
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  owner?.ownerName ?? 'صاحب المغسلة',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTheme.text(
+                    size: 13,
+                    weight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                Text(
+                  owner == null
+                      ? 'لا يوجد حساب مسجّل على هذا الجهاز'
+                      : '${owner.shopName} • ${owner.formattedPhone}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTheme.text(
+                    size: 10.5,
+                    color: AppColors.textSecondary,
+                    height: 1.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (owner != null)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: owner.isDemo ? AppColors.warningTint : AppColors.readyTint,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                owner.isDemo ? 'تجريبي' : 'نشط',
+                style: AppTheme.text(
+                  size: 10,
+                  weight: FontWeight.w700,
+                  color: owner.isDemo ? AppColors.warning : AppColors.delivered,
+                  height: 1.3,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
 class _HeaderChip extends StatelessWidget {
   const _HeaderChip({required this.icon, required this.label});
 
@@ -240,6 +350,7 @@ class _DrawerItem extends StatelessWidget {
     required this.selected,
     required this.onTap,
     this.badge,
+    this.isDestructive = false,
   });
 
   final IconData icon;
@@ -248,9 +359,21 @@ class _DrawerItem extends StatelessWidget {
   final VoidCallback onTap;
   final int? badge;
 
+  /// عنصر خطر (مثل تسجيل الخروج) يُعرض بلون أحمر.
+  final bool isDestructive;
+
   @override
   Widget build(BuildContext context) {
-    final Color foreground = selected ? AppColors.primaryDark : AppColors.textSecondary;
+    final Color foreground = isDestructive
+        ? AppColors.cancelled
+        : selected
+            ? AppColors.primaryDark
+            : AppColors.textSecondary;
+    final Color titleColor = isDestructive
+        ? AppColors.cancelled
+        : selected
+            ? AppColors.primaryDark
+            : AppColors.textPrimary;
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
       child: Material(
@@ -272,8 +395,10 @@ class _DrawerItem extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: AppTheme.text(
                       size: 13.5,
-                      weight: selected ? FontWeight.w700 : FontWeight.w600,
-                      color: selected ? AppColors.primaryDark : AppColors.textPrimary,
+                      weight: selected || isDestructive
+                          ? FontWeight.w700
+                          : FontWeight.w600,
+                      color: titleColor,
                     ),
                   ),
                 ),
@@ -354,8 +479,8 @@ void _showAboutApp(BuildContext context) {
                 border: Border.all(color: AppColors.border),
               ),
               child: Text(
-                'تطبيق محلي لمغسلة واحدة: يعمل دون إنترنت أو سيرفر أو حسابات '
-                'مستخدمين، وجميع البيانات محفوظة على الجهاز.',
+                'تطبيق محلي لمغسلة واحدة: يعمل دون إنترنت أو سيرفر، '
+                'بحساب واحد لصاحب المغسلة وجميع البيانات محفوظة على الجهاز.',
                 textAlign: TextAlign.center,
                 style: AppTheme.text(
                   size: 11,

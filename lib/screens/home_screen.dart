@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../models/laundry_order.dart';
+import '../providers/auth_provider.dart';
 import '../providers/orders_provider.dart';
 import '../utils/app_constants.dart';
 import '../utils/app_theme.dart';
 import '../utils/formatters.dart';
+import '../widgets/app_feedback.dart';
 import '../widgets/app_top_bar.dart';
 import '../widgets/custom_drawer.dart';
 import '../widgets/empty_state.dart';
@@ -14,6 +16,7 @@ import '../widgets/section_card.dart';
 import '../widgets/summary_card.dart';
 import 'add_order_screen.dart';
 import 'history_screen.dart';
+import 'login_screen.dart';
 import 'order_details_screen.dart';
 import 'orders_screen.dart';
 
@@ -61,14 +64,47 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  /// تسجيل الخروج: تأكيد، إنهاء الجلسة، ثم العودة لشاشة تسجيل الدخول.
+  Future<void> _logout() async {
+    final AuthProvider auth = context.read<AuthProvider>();
+    final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
+
+    final bool confirmed = await showConfirmDialog(
+      context,
+      title: 'تسجيل الخروج',
+      message: 'سيتم إنهاء الجلسة الحالية. طلبات مغسلتك وحسابك تبقى '
+          'محفوظة على الجهاز، ويمكنك الدخول بها مرة أخرى في أي وقت.',
+      confirmLabel: 'تسجيل الخروج',
+      icon: Icons.logout_rounded,
+      isDestructive: true,
+    );
+    if (!confirmed) {
+      return;
+    }
+
+    await auth.logout();
+    if (!mounted) {
+      return;
+    }
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute<void>(
+        builder: (BuildContext context) => const LoginScreen(),
+      ),
+      (Route<dynamic> route) => false,
+    );
+    showAppSnackBarOn(messenger, 'تم تسجيل الخروج بنجاح');
+  }
+
   @override
   Widget build(BuildContext context) {
     final OrdersProvider provider = context.watch<OrdersProvider>();
+    final AuthProvider auth = context.watch<AuthProvider>();
+    final String shopName = auth.account?.shopName ?? AppConstants.appName;
 
     return Scaffold(
       appBar: AppTopBar(
         title: _titles[_tabIndex],
-        subtitle: '${provider.activeOrdersCount} طلب نشط داخل المغسلة',
+        subtitle: '$shopName • ${provider.activeOrdersCount} طلب نشط',
         actions: <Widget>[
           IconButton(
             onPressed: _openAddOrder,
@@ -82,6 +118,7 @@ class _HomeScreenState extends State<HomeScreen> {
         currentTab: _tabIndex,
         onSelectTab: _selectTab,
         onAddOrder: _openAddOrder,
+        onLogout: _logout,
       ),
       floatingActionButton: _tabIndex == 2
           ? null

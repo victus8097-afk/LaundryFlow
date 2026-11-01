@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 
+import 'providers/auth_provider.dart';
 import 'providers/orders_provider.dart';
 import 'screens/welcome_screen.dart';
 import 'utils/app_constants.dart';
@@ -13,15 +14,23 @@ void main() {
 
 /// نقطة انطلاق تطبيق LaundryFlow.
 ///
-/// التطبيق عربي بالكامل (RTL)، يعمل محليًا دون سيرفر، ويستخدم
-/// [OrdersProvider] كمصدر وحيد لبيانات الطلبات.
+/// التطبيق عربي بالكامل (RTL)، يعمل محليًا دون سيرفر، ويستخدم:
+/// - [AuthProvider]: حساب صاحب المغسلة (تسجيل الدخول / إنشاء الحساب).
+/// - [OrdersProvider]: مصدر وحيد لبيانات الطلبات.
 class LaundryFlowApp extends StatelessWidget {
   const LaundryFlowApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider<OrdersProvider>(
-      create: (BuildContext context) => OrdersProvider()..load(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider<AuthProvider>(
+          create: (BuildContext context) => AuthProvider()..load(),
+        ),
+        ChangeNotifierProvider<OrdersProvider>(
+          create: (BuildContext context) => OrdersProvider()..load(),
+        ),
+      ],
       child: MaterialApp(
         title: AppConstants.appName,
         debugShowCheckedModeBanner: false,

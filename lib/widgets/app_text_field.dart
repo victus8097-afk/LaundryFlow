@@ -10,6 +10,7 @@ class AppTextField extends StatelessWidget {
     required this.controller,
     this.label,
     this.hint,
+    this.helperText,
     this.prefixIcon,
     this.suffixIcon,
     this.keyboardType,
@@ -19,8 +20,11 @@ class AppTextField extends StatelessWidget {
     this.inputFormatters,
     this.textInputAction,
     this.onChanged,
+    this.onFieldSubmitted,
     this.enabled = true,
     this.autofocus = false,
+    this.obscureText = false,
+    this.autofillHints,
     this.textCapitalization = TextCapitalization.none,
     this.autovalidateMode = AutovalidateMode.onUserInteraction,
   });
@@ -28,6 +32,7 @@ class AppTextField extends StatelessWidget {
   final TextEditingController controller;
   final String? label;
   final String? hint;
+  final String? helperText;
   final IconData? prefixIcon;
   final Widget? suffixIcon;
   final TextInputType? keyboardType;
@@ -37,8 +42,11 @@ class AppTextField extends StatelessWidget {
   final List<TextInputFormatter>? inputFormatters;
   final TextInputAction? textInputAction;
   final ValueChanged<String>? onChanged;
+  final ValueChanged<String>? onFieldSubmitted;
   final bool enabled;
   final bool autofocus;
+  final bool obscureText;
+  final Iterable<String>? autofillHints;
   final TextCapitalization textCapitalization;
   final AutovalidateMode autovalidateMode;
 
@@ -53,8 +61,11 @@ class AppTextField extends StatelessWidget {
       inputFormatters: inputFormatters,
       textInputAction: textInputAction,
       onChanged: onChanged,
+      onFieldSubmitted: onFieldSubmitted,
       enabled: enabled,
       autofocus: autofocus,
+      obscureText: obscureText,
+      autofillHints: autofillHints,
       textCapitalization: textCapitalization,
       autovalidateMode: autovalidateMode,
       style: AppTheme.text(size: 14, weight: FontWeight.w400),
@@ -62,6 +73,7 @@ class AppTextField extends StatelessWidget {
       decoration: AppTheme.fieldDecoration(
         label: label,
         hint: hint,
+        helper: helperText,
         prefixIcon: prefixIcon,
         suffixIcon: suffixIcon,
       ),

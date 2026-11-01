@@ -1,25 +1,44 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 
+import '../providers/auth_provider.dart';
 import '../utils/app_constants.dart';
 import '../utils/app_theme.dart';
 import 'home_screen.dart';
+import 'login_screen.dart';
+import 'register_screen.dart';
 
-/// الشاشة الأولى: واجهة ترحيبية تعكس هوية التطبيق.
+/// الشاشة الأولى: واجهة ترحيبية تعكس هوية التطبيق، ومنها يبدأ صاحب المغسلة
+/// رحلته: تسجيل دخول (أو إنشاء حساب) ثم لوحة التحكم.
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
 
+  /// ينتقل إلى لوحة التحكم إن كانت هناك جلسة محفوظة، وإلا إلى تسجيل الدخول.
   void _start(BuildContext context) {
-    // ننتقل إلى لوحة التحكم ونستبدل شاشة الترحيب حتى لا يعود إليها زر الرجوع.
+    final AuthProvider auth = context.read<AuthProvider>();
+    // نستبدل شاشة الترحيب حتى لا يعود إليها زر الرجوع.
     Navigator.of(context).pushReplacement(
       MaterialPageRoute<void>(
-        builder: (BuildContext context) => const HomeScreen(),
+        builder: (BuildContext context) =>
+            auth.isSignedIn ? const HomeScreen() : const LoginScreen(),
+      ),
+    );
+  }
+
+  /// إنشاء حساب جديد يفتح فوق شاشة الترحيب (Navigator.push).
+  Future<void> _openRegister(BuildContext context) async {
+    await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
+        builder: (BuildContext context) => const RegisterScreen(),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final AuthProvider auth = context.watch<AuthProvider>();
+
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
       child: Scaffold(
@@ -93,7 +112,9 @@ class WelcomeScreen extends StatelessWidget {
                                         mainAxisAlignment: MainAxisAlignment.center,
                                         children: <Widget>[
                                           Text(
-                                            'ابدأ الآن',
+                                            auth.isSignedIn
+                                                ? 'متابعة إلى لوحة التحكم'
+                                                : 'تسجيل الدخول',
                                             style: AppTheme.text(
                                               size: 16,
                                               weight: FontWeight.w800,
@@ -102,7 +123,7 @@ class WelcomeScreen extends StatelessWidget {
                                           ),
                                           const SizedBox(width: 8),
                                           const Icon(
-                                            Icons.arrow_back_rounded,
+                                            Icons.login_rounded,
                                             size: 20,
                                             color: AppColors.secondary,
                                           ),
@@ -110,7 +131,28 @@ class WelcomeScreen extends StatelessWidget {
                                       ),
                                     ),
                                   ),
-                                  const SizedBox(height: 14),
+                                  const SizedBox(height: 6),
+                                  TextButton.icon(
+                                    onPressed: () => _openRegister(context),
+                                    style: TextButton.styleFrom(
+                                      foregroundColor: Colors.white,
+                                      minimumSize: const Size(0, 40),
+                                      textStyle: AppTheme.text(
+                                        size: 12.5,
+                                        weight: FontWeight.w700,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    icon: const Icon(
+                                      Icons.person_add_alt_1_rounded,
+                                      size: 17,
+                                      color: Colors.white,
+                                    ),
+                                    label: const Text(
+                                      'ليس لديك حساب؟ أنشئ حساب مغسلتك',
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
                                   Text(
                                     'الإصدار ${AppConstants.appVersion} • يعمل دون إنترنت',
                                     textAlign: TextAlign.center,
