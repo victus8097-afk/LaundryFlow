@@ -1,0 +1,43 @@
+name: laundry_flow
+description: 'LaundryFlow — نظام ذكي لإدارة مغسلة ملابس: طلبات، حالات، أسعار وإحصائيات.'
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.2.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # تعريب عناصر Material (منتقي التاريخ، الأزرار، الرسائل القياسية)
+  flutter_localizations:
+    sdk: flutter
+  # إدارة الحالة
+  provider: ^6.1.2
+  # حفظ البيانات محليًا على الجهاز
+  shared_preferences: ^2.2.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+
+  fonts:
+    - family: Cairo
+      fonts:
+        - asset: assets/fonts/Cairo-Light.ttf
+          weight: 300
+        - asset: assets/fonts/Cairo-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Cairo-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Cairo-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Cairo-ExtraBold.ttf
+          weight: 800
